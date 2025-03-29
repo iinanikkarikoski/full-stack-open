@@ -27,7 +27,11 @@ mongoose.connect(url)
   .catch(error => console.log("Error connectin to the database: ", error));
 
 const personSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    minlength: 3,
+    required: true
+  },
   number: String,
 })
 
@@ -85,7 +89,7 @@ app.get('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error)); 
 });
 
-app.post('/api/persons', async (req, res) => {
+app.post('/api/persons', async (req, res, next) => {
   const {name, number} = req.body;
 
   if (!name || !number) {
@@ -101,7 +105,7 @@ app.post('/api/persons', async (req, res) => {
 
   person.save()
     .then(savedPerson => res.status(201).json(savedPerson))
-    .catch(error => res.status(500).json({error: error.message}));
+    .catch(error => next(error))
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -139,13 +143,18 @@ app.delete('/api/persons/:id', async (req, res, next) => {
   }
 });
 
-app.use((error, req, res, next) => {
+const errorHandler = (error, req, res, next) => {
   console.error(error.message);
   if (error.name === 'CastError') {
     return res.status(400).json({ error: 'Malformatted ID' });
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).json({error: error.message})
   }
-  next(error);
-});
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
