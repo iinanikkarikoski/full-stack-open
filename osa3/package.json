@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js Kissa22",
-    "dev": "node --watch index.js Kissa22",
+    "start": "node start",
+    "dev": "node --watch index.js",
     "test": "\"echo \\\"Error: no test specified\\\" && exit 1\""
   },
   "author": "Iina N",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.13.1",
     "morgan": "^1.10.0"

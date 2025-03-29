@@ -19,14 +19,15 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 //db
 ////////////////////////////////////////////////////////////////////////////////////////
-const password = process.argv[2]
 const name = process.argv[3]
 const number = process.argv[4]
 
-const url = `mongodb+srv://Kissa:${password}@cluster0.geslcnv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+const url = process.env.MONGODB_URI;
 
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
+  .then(() => console.log("Connected to the database"))
+  .catch(error => console.log("Error connectin to the database: ", error));
 
 const personSchema = new mongoose.Schema({
   name: String,
@@ -34,26 +35,6 @@ const personSchema = new mongoose.Schema({
 })
 
 const Person = mongoose.model('Person', personSchema)
-
-/*if (name && number) {
-    const person = new Person({
-        name,
-        number,
-    });
-
-    person.save().then(() => {
-        console.log(`Added ${name} number ${number} to phonebook`);
-        mongoose.connection.close();
-    }); 
-} else {
-    Person.find({}).then(result => {
-        console.log('Phonebook');
-        result.forEach(person => {
-            console.log(`${person.name} ${person.number}`);
-        });
-        mongoose.connection.close();
-    });
-}*/
 ///////////////////////////////////////////////////////////////////////////////////////
 
 let persons = [
@@ -71,11 +52,12 @@ let persons = [
     number: "39-23-6423122" }
 ];
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
+  const count = await Person.countDocuments();
   const date = new Date();
   res.send(`
     <h1>Phonebook</h1>
-    <p>Phonebook has info for ${persons.length} people</p>
+    <p>Phonebook has info for ${count} people</p>
     <p>${date}</p>
   `)
 });
@@ -86,45 +68,58 @@ app.get('/api/persons', (req, res) => {
   })
 });
 
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(p => p.id === id);
-
-  if (person) {
-    res.json(person);
-  } else {
-    res.status(404).send({error: "Person not found"});
-  }
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(person=> {
+      if (person) {
+        res.json(person);
+      } else {
+        res.status(404).send({error: "Person not found"});
+      }
+    })
+    .catch(error => next(error)); 
 });
 
-app.post('/api/persons', (req, res) => {
-  const body = req.body;
+app.post('/api/persons', async (req, res) => {
+  const {name, number} = req.body;
 
-  if (!body.name || !body.number) {
+  if (!name || !number) {
     return res.status(400).json({error: "Name or number missing"});
   }
 
-  if (persons.some(person => person.name === body.name)) {
+  const existingPerson = await Person.findOne({name});
+  if (existingPerson) {
     return res.status(400).json({error: "Name must be unique"});
   }
 
-  const newPerson = {
-    id: Math.floor(Math.random()* 10000),
-    name: body.name,
-    number: body.number
-  };
+  const person = new Person({ name, number });
 
-  persons.push(newPerson);
-  res.status(201).json(newPerson);
-})
-
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter(p => p.id !== id);
-  res.status(204).end();
+  person.save()
+    .then(savedPerson => res.status(201).json(savedPerson))
+    .catch(error => res.status(500).json({error: error.message}));
 });
 
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then(person => {
+      if (person) {
+        return res.status(204).end();
+      } else {
+        return res.status(404).json({error: "Person not found"});
+      }
+    })
+    .catch(error => next(error));
+});
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+app.use((error, req, res, next) => {
+  console.error(error.message);
+  if (error.name === 'CastError') {
+    return res.status(400).json({ error: 'Malformatted ID' });
+  }
+  next(error);
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
