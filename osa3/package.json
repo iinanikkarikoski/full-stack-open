@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js",
+    "start": "node index.js",
     "dev": "node --watch index.js",
+    "lint": "eslint .",
     "test": "\"echo \\\"Error: no test specified\\\" && exit 1\""
   },
   "author": "Iina N",
@@ -15,5 +16,11 @@
     "express": "^4.21.2",
     "mongoose": "^8.13.1",
     "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@stylistic/eslint-plugin-js": "^4.2.0",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0"
   }
 }
