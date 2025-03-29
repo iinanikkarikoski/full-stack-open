@@ -31,6 +31,14 @@ const personSchema = new mongoose.Schema({
   number: String,
 })
 
+personSchema.set('toJSON', {
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+    delete returnedObject.__v
+  }
+})
+
 const Person = mongoose.model('Person', personSchema)
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +105,10 @@ app.post('/api/persons', async (req, res) => {
 });
 
 app.delete('/api/persons/:id', async (req, res, next) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ error: "Invalid ID format" });
+  }
+
   try {
     const person = await Person.findByIdAndDelete(req.params.id);
     if (!person) {
