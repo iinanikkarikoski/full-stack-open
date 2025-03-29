@@ -96,16 +96,16 @@ app.post('/api/persons', async (req, res) => {
     .catch(error => res.status(500).json({error: error.message}));
 });
 
-app.delete('/api/persons/:id', (req, res, next) => {
-  Person.findByIdAndDelete(req.params.id)
-    .then(person => {
-      if (person) {
-        return res.status(204).end();
-      } else {
-        return res.status(404).json({error: "Person not found"});
-      }
-    })
-    .catch(error => next(error));
+app.delete('/api/persons/:id', async (req, res, next) => {
+  try {
+    const person = await Person.findByIdAndDelete(req.params.id);
+    if (!person) {
+      return res.status(404).json({ error: "Person not found" });
+    }
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use((error, req, res, next) => {
