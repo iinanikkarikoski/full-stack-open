@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan')
+const mongoose = require('mongoose')
 const app = express();
 app.use(express.json());
 
@@ -15,6 +16,45 @@ morgan.token('body', (req) => {
 });
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+
+//db
+////////////////////////////////////////////////////////////////////////////////////////
+const password = process.argv[2]
+const name = process.argv[3]
+const number = process.argv[4]
+
+const url = `mongodb+srv://Kissa:${password}@cluster0.geslcnv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+
+mongoose.set('strictQuery', false)
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+})
+
+const Person = mongoose.model('Person', personSchema)
+
+/*if (name && number) {
+    const person = new Person({
+        name,
+        number,
+    });
+
+    person.save().then(() => {
+        console.log(`Added ${name} number ${number} to phonebook`);
+        mongoose.connection.close();
+    }); 
+} else {
+    Person.find({}).then(result => {
+        console.log('Phonebook');
+        result.forEach(person => {
+            console.log(`${person.name} ${person.number}`);
+        });
+        mongoose.connection.close();
+    });
+}*/
+///////////////////////////////////////////////////////////////////////////////////////
 
 let persons = [
   { id: 1, 
@@ -41,7 +81,9 @@ app.get('/info', (req, res) => {
 });
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons);
+  Person.find({}).then(persons => {
+    res.json(persons);
+  })
 });
 
 app.get('/api/persons/:id', (req, res) => {
