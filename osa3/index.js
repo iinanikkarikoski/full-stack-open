@@ -19,10 +19,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 //db
 ////////////////////////////////////////////////////////////////////////////////////////
-const name = process.argv[3]
-const number = process.argv[4]
-
-const url = process.env.MONGODB_URI;
+const url = MONGODB_URI;
 
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
