@@ -141,7 +141,7 @@ const App = () => {
     })
     .catch(error => {
       console.error('Error adding person: ', error)
-      setNotificationMessage({ message: error.response.data.error });
+      setNotificationMessage(error.response.data.error);
       setNotificationType('error')
       setTimeout(() => setNotificationMessage(null), 5000)
     })
