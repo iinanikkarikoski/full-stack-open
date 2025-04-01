@@ -1,0 +1,15 @@
+post http://localhost:3003/api/login
+Content-Type: application/json
+
+{
+    "username": "Kissa",
+    "password": "Kissa22"
+}
+
+  {
+    "title": "auth testi",
+    "author": "auts",
+    "blogUrl": "xxx.xxx-xxx",
+    "likes": 5,
+    "id": "67ec20c13c58a66e605969ba"
+  }
